@@ -25,7 +25,7 @@ latest_posts:
   limit: 3 # leave blank to include all the blog posts
 ---
 
-Bio coming soon.
+Coming soon.
 
 {% unless site.whats_new.enabled == false %}
 
