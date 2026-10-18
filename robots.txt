@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://martinezjulio.github.io/modified-al-folio/sitemap.xml
