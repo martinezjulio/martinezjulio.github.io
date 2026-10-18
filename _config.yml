@@ -89,10 +89,11 @@ footer_fixed: false
 # Keyed by page title; set false to temporarily hide a page from the nav WITHOUT
 # editing that page's front matter. Pages not listed here follow their own `nav:`
 # setting. (The About/home link is always shown.)
-nav_visibility:
+nav_visibility: # keyed by page title; false hides the page from the nav (page stays published)
+  "what's new": false
   publications: true
-  projects: true
-  blog: true
+  projects: false
+  blog: false
 
 # Show/hide the "what's new" section (heading + combined feed) on the About page.
 # Set enabled: false to remove the entire section. (The standalone /whats-new/
