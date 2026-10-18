@@ -1,0 +1,19 @@
+<!--
+  Site-local include: the page heading used by every nav page except the about
+  page (which gets the same heading from the gem's about layout). Shows the
+  site owner's name instead of the page title, like the about page; the
+  highlighted sidebar item says which section the page is. The browser-tab
+  title still comes from each page's `title:`. The markup mirrors the gem's
+  about layout (first name in a font-weight-bold span) so main.scss can style
+  the name heading on every page with one selector.
+-->
+<header class="post-header page-heading">
+  <h1 class="post-title">
+    {% if site.title == 'blank' %}
+      <span class="font-weight-bold">{{ site.first_name }}</span> {{ site.middle_name }}
+      {{ site.last_name }}
+    {% else %}
+      {{ site.title }}
+    {% endif %}
+  </h1>
+</header>

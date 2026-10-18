@@ -1,0 +1,27 @@
+{% comment %}
+  Site-local override of al_folio_core's _includes/footer.liquid
+  (docs/CUSTOMIZE.md: "optional local override includes").
+  Single slim flowing footer: copyright left, social icons right.
+  Styled by the site-local section of assets/css/main.scss.
+
+  Intentionally NOT reproduced from the gem version: the
+  site.footer_fixed fixed-strip variant, the newsletter form
+  (site.newsletter.enabled), site.footer_text, impressum_path, and
+  last_updated. This override assumes footer_fixed: false in
+  _config.yml (required so the body gets the sticky-bottom-footer
+  class and drops the 70px padding reserved for the fixed strip).
+  To restore any gem behavior, delete this file.
+{% endcomment %}
+<footer class="sticky-bottom" role="contentinfo">
+  <div class="container">
+    <div class="footer-row">
+      <div class="footer-copy">
+        &copy; {{ site.time | date: '%Y' }}
+        {{ site.first_name }}
+        {{ site.middle_name }}
+        {{ site.last_name }}.
+      </div>
+      <div class="footer-social">{% social_links %}</div>
+    </div>
+  </div>
+</footer>

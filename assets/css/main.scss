@@ -1,0 +1,688 @@
+---
+# Only the main Sass file needs front matter (the dashes are enough)
+---
+@charset "utf-8";
+
+/* Built-in Sass modules you’ll likely use across partials */
+@use "sass:math";
+@use "sass:string";
+
+/* Configure your design tokens BEFORE loading any of your partials.
+   Make sure `_sass/_variables.scss` declares `$max-content-width: 72rem !default;` */
+@use "variables" with (
+  $max-content-width: {{ site.max_width | default:  "930px" }}
+);
+
+/* Your project partials — convert these files to `@use "variables";`
+   (or `@use "variables" as *;`) inside each file and qualify variables if needed. */
+@use "themes";
+@use "layout";
+
+// Core styles organized by usage
+@use "typography";
+@use "navbar";
+@use "footer";
+@use "blog";
+@use "publications";
+@use "components";
+@use "utilities";
+
+// Other specialized styles
+@use "tabs";
+@use "teachings";
+@use "typograms";
+
+// Site-local customizations.
+// tailwind.css styles the body in `@layer base`; these rules are unlayered and loaded later,
+// so they win the cascade.
+
+// Body copy in Wix Madefor Text (loaded via the Google Fonts URL in _config.yml;
+// PT Serif stays in that URL as the fallback). Headings and the site nav keep the
+// theme's original sans font. Antialiased smoothing renders text thinner/lighter
+// on macOS.
+body {
+  font-family: "Wix Madefor Text", "PT Serif", Georgia, ui-serif, Cambria, "Times New Roman", Times, serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Taller line-height for body copy (1.75 vs the theme's 1.5) — tighter leading
+// makes the same text read denser and darker.
+p,
+ul,
+ol {
+  line-height: 1.75;
+}
+
+// Gray body text (Tailwind gray-700) in light mode; headings stay black.
+// Green links (Tailwind green-600) via the theme accent variables, which also
+// drive link hover states. Dark mode keeps the theme defaults except for a
+// darker page background (the gem's #1c1c1d reads a bit light); the sticky
+// nav bar and drawer reuse --global-bg-color, so they follow it.
+:root {
+  --global-text-color: #364153;
+  --global-heading-color: #000000;
+  --global-theme-color: rgb(22, 163, 74);
+  --global-hover-color: rgb(22, 163, 74);
+}
+
+html[data-theme="dark"] {
+  --global-heading-color: var(--global-text-color);
+  --global-bg-color: #121212;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: Roboto, sans-serif;
+  color: var(--global-heading-color);
+}
+
+// Smaller headings: page titles (the name on the about page, post titles) and
+// top-level section headings (news / latest posts / selected publications).
+h1.post-title {
+  font-size: 1.75rem;
+}
+
+// The gem's about layout wraps the first name in a `font-weight-bold` span, so the
+// name renders half bold, half light. Make the whole name one weight (the heading's).
+h1.post-title .font-weight-bold {
+  font-weight: inherit;
+}
+
+// The site owner's name heading (about page via the gem's about layout; every
+// other nav page via _includes/page_heading.liquid, which mirrors that markup):
+// small bold uppercase sans with a little tracking, like a masthead. The span
+// is what distinguishes it from a blog post's h1.post-title. Archivo is the
+// face already loaded for the blog list titles.
+h1.post-title:has(> .font-weight-bold) {
+  font-family: Archivo, Roboto, sans-serif;
+  font-stretch: 100%;
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+// More air between the name heading and the list/bibliography below it on the
+// nav pages (page_heading.liquid). The about page keeps the gem's spacing so
+// the subtitle stays tucked under the name.
+.page-heading {
+  margin-bottom: 2.5rem;
+}
+
+.post > article > h2 {
+  font-size: 1.4rem;
+}
+
+// "What's new" combined feed (_includes/whats_new.liquid): al-folio's compact
+// date | item news table, merging posts + news into one list. The linked section
+// heading on the about page stays heading-colored (like the gem's news /
+// latest-posts headings, which use color: inherit), and each date carries a
+// small muted "blog" / "news" tag so the two streams stay distinguishable.
+.whats-new-heading {
+  margin-top: 2rem;
+}
+
+.whats-new-heading a {
+  color: inherit;
+}
+
+.whats-new-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.whats-new-table th,
+.whats-new-table td {
+  padding: 0.2rem 0;
+  border: none;
+  font-weight: normal;
+  text-align: left;
+  // Align on the text baseline (not the cell top) so the differently-sized date,
+  // tag, and title all sit on the same line instead of the smaller text riding high.
+  vertical-align: baseline;
+}
+
+// Date and tag each get their own shrink-to-content column (width: 1% + nowrap),
+// so the tags — and the item text — line up in straight columns regardless of how
+// wide each proportional-font date renders. The item column takes what's left.
+.whats-new-date {
+  width: 1%;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+// Qualified with .whats-new-table so this padding-right beats the base
+// `.whats-new-table td { padding: 0.2rem 0 }` rule (which would otherwise zero it
+// out), giving a clear gap between the blog/news tag and the item title.
+.whats-new-table .whats-new-meta {
+  width: 1%;
+  white-space: nowrap;
+  padding-right: 1.5rem;
+}
+
+.whats-new-tag {
+  font-size: 0.72rem;
+  color: var(--global-text-color);
+  opacity: 0.55;
+}
+
+.whats-new-tag::before {
+  content: "·";
+  margin: 0 0.4em;
+  opacity: 0.6;
+}
+
+// Trim the outer margins of an inline announcement's paragraph so its first line
+// sits level with the date/tag and rows stay evenly spaced.
+.whats-new-item > :first-child {
+  margin-top: 0;
+}
+
+.whats-new-item > :last-child {
+  margin-bottom: 0;
+}
+
+// Smaller profile image on the about page: 3/4 of the gem default (30% -> 22.5%
+// of the content column at >= 576px). Sizes the .profile container, so it applies
+// to whatever image is set in the page's `profile.image` front matter.
+@media (min-width: 576px) {
+  .profile {
+    width: 22.5%;
+  }
+
+  // Raise the about-page photo so its top edge sits on the cap line of the name.
+  // The gem's about layout renders the header (name + subtitle) before the floated
+  // .profile, and a float can't rise above a preceding in-flow block, so float the
+  // header too (leaving room for the 22.5% photo + its 1rem margin, with slack) and
+  // the photo floats up beside it. The 0.25rem margin is the h1's half-leading plus
+  // Archivo's ascent-minus-cap-height at 1.125rem (measured: ~3.9px); re-measure
+  // if the name heading's font or size changes. Scoped with :has() to
+  // right-aligned profiles; browsers without :has() keep the old layout.
+  .post:has(.profile.float-right) > .post-header {
+    float: left;
+    width: calc(77.5% - 1.5rem);
+  }
+
+  .post:has(.profile.float-right) > article > .profile.float-right {
+    margin-top: 0.25rem;
+  }
+}
+
+// Below 576px the gem makes .profile full-width, so the photo spans the whole
+// phone screen. Cap it near the desktop rendered size (~210px) and center it
+// above the bio text (float-right is full-width here anyway, so no text wrap
+// is lost by unfloating).
+@media (max-width: 575.98px) {
+  .profile {
+    width: 60%;
+    max-width: 220px;
+    float: none;
+    margin: 0 auto 1rem;
+  }
+}
+
+// Publications list on phones (< 576px). The gem's col-sm-* columns collapse
+// to width:100% here, so citation and preview stack. Keep them side-by-side
+// instead (citation on the left, preview on the right at a fixed ~120px column);
+// publications font size is left as-is per request.
+@media (max-width: 575.98px) {
+  // Publications: the gem bib.liquid's badge/preview column (.col.abbr) and the
+  // col-sm-8 citation column. Sizing the abbr column caps both the w-100 venue
+  // badge and the preview image.
+  .publications .row {
+    flex-wrap: nowrap;
+  }
+
+  .publications .abbr {
+    width: auto;
+    flex: 0 0 120px;
+    max-width: 120px;
+  }
+
+  .publications .col-sm-8 {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+// Publications: drop the year-group headers. The gem renders each year as an
+// <h2 class="bibliography"> — a large, right-aligned, gray heading with a top
+// border and top margin, so it doubles as the divider + gap between year
+// groups. Hiding it collapses the page into one continuous list: each entry
+// keeps its own 1rem spacing, with no year labels, dividers, or gaps between
+// groups. (Remove this rule to restore the theme's year grouping.)
+.publications h2.bibliography {
+  display: none;
+}
+
+// Compact outbound-arrow icon after external links in the blog, projects and
+// news lists (same path as the theme's stock 2rem icon, viewBox cropped to the
+// glyph so it sits inline at text size instead of floating above the line).
+.external-icon {
+  width: 0.85em;
+  height: 0.85em;
+  margin-left: 0.25rem;
+  vertical-align: -0.05em;
+  color: var(--global-text-color-light);
+}
+
+// Blog page: one row per post, title left and date right, hairline dividers
+// (see _pages/blog.md). Titles are Archivo bold at normal width (the
+// free stand-in for a wide grotesque; loaded via the Google Fonts URL in
+// _config.yml and used by nothing else on the site, so other pages never fetch
+// it) in the body text color, theme color on hover; dates stay Roboto, small
+// and muted.
+.writing-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.writing-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--global-divider-color);
+}
+
+.writing-title {
+  font-family: Archivo, Roboto, sans-serif;
+  font-stretch: 100%; // normal width; the loaded face spans 100-125% if this needs tuning
+  font-weight: 700;
+  min-width: 0;
+}
+
+.writing-title a {
+  color: var(--global-text-color);
+  text-decoration: none;
+}
+
+.writing-title a:hover {
+  color: var(--global-theme-color);
+}
+
+.writing-date {
+  flex: 0 0 auto;
+  font-family: Roboto, sans-serif;
+  font-size: 0.8rem;
+  color: var(--global-text-color-light);
+  white-space: nowrap;
+}
+
+// Projects page: a plain bulleted list of linked titles (see
+// _pages/projects.md). Bullets are made explicit because preflight is off and
+// the tailwind-native CSS doesn't guarantee list markers inside articles.
+.projects-list {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0;
+}
+
+.projects-list li {
+  margin-bottom: 0.35rem;
+}
+
+// Slim footer: one row at the end of the content column,
+// copyright left, small social icons right. Pairs with the site-local
+// _includes/footer.liquid override. Overrides the gem's footer.sticky-bottom
+// defaults (top border, 40px paddings, 0.9rem centered text) — these rules
+// come after the @use imports, so they win at equal specificity.
+footer.sticky-bottom {
+  border-top: none; // no divider above the footer
+  margin-top: 3rem;
+  padding-top: 0;
+  padding-bottom: 1.5rem;
+  font-family: Roboto, sans-serif; // sans like the navbar; delete to keep serif
+  font-size: 0.875rem;
+  color: #99a1af; // Tailwind gray-400 — lighter than body text
+
+  .container {
+    text-align: left; // gem centers footer text
+  }
+
+  .footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+  }
+
+  .footer-social {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    a {
+      color: #99a1af; // Tailwind gray-400 icons
+      font-size: 1.125rem; // ~18px icons
+      line-height: 1;
+      transition: color 0.15s ease-in-out;
+
+      &:hover {
+        color: #6a7282; // Tailwind gray-500 — subtle darker-gray hover, not green
+        text-decoration: none; // base layer underlines link hovers
+      }
+    }
+  }
+}
+
+// Sidebar site navigation (pairs with the site-local
+// _includes/header.liquid override; assumes navbar_fixed: false so the body
+// gets no fixed-top padding, and enable_progressbar: false so progress-bar.js
+// never probes the removed #navbar).
+//
+// Wide viewports (>= $site-nav-breakpoint): links stack vertically in a left
+// rail. body padding-left reserves the rail, so the centered .container
+// shifts right and [rail + content] behaves like a centered flex row;
+// the rail itself is a zero-height sticky header whose nav is pulled
+// into the reserved space with a margin calc (scrollbar-safe, unlike
+// viewport-based position:fixed math).
+//
+// Narrow viewports (< $site-nav-breakpoint): the header is a slim sticky bar
+// (CSS-drawn hamburger button + current page label) and the same list is a
+// left slide-out drawer. The gem's assets/js/nav-toggle.js toggles `.show` on
+// #site-nav and `.collapsed` on the button; .site-nav-backdrop (a sibling
+// after the nav) is revealed while open and closes the drawer because a tap
+// on it is outside the panel. Stacking inside the header: drawer (25) over
+// backdrop (20); neither overlaps the bar, which they start below.
+$site-nav-width: 8rem; // 128px rail; fits "publications" at 0.875rem
+$site-nav-gap: 1.5rem; // 24px gutter between rail and content column
+$site-nav-breakpoint: 1100px; // 930px container + rail + breathing room
+$site-nav-narrow-max: $site-nav-breakpoint - 0.02px; // max-width twin of the breakpoint
+$site-nav-bar-height: 3rem; // narrow-viewport sticky bar
+
+.site-header {
+  font-family: Roboto, sans-serif;
+}
+
+.site-nav-list {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-nav-item {
+  display: flex;
+  align-items: center;
+
+  // Dot indicator: the 4px dot always reserves its box (12px with margin)
+  // and toggles via transform, so link text never shifts between states.
+  &::before {
+    content: "";
+    flex: none;
+    width: 4px;
+    height: 4px;
+    margin-right: 0.5rem;
+    border-radius: 9999px;
+    background-color: var(--global-theme-color);
+    transform: scale(0);
+    transition: transform 0.15s ease-in-out;
+  }
+
+  &.active::before {
+    transform: scale(1.25);
+  }
+}
+
+.site-nav-link {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #6a7282; // Tailwind gray-500; muted inactive links
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 0.15s ease-in-out;
+
+  &:hover {
+    color: var(--global-text-color); // darker gray on hover
+    text-decoration: none; // base layer underlines link hovers
+  }
+}
+
+.site-nav-item.active .site-nav-link {
+  color: var(--global-theme-color); // green accent, hover included
+}
+
+@media (max-width: $site-nav-narrow-max) {
+  .site-header {
+    // The bar must stay on screen while scrolling; sticky on the header (not
+    // the bar) because a sticky child cannot leave a parent of its own height.
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+
+  .site-nav-bar {
+    display: flex;
+    align-items: center;
+    column-gap: 0.75rem;
+    height: $site-nav-bar-height;
+    padding: 0 15px;
+    background-color: var(--global-bg-color);
+    border-bottom: 1px solid var(--global-divider-color);
+  }
+
+  .site-nav-toggle {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-left: -0.75rem; // 40px hit area; bars line up with the 15px content edge
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--global-text-color);
+    cursor: pointer;
+  }
+
+  // Three 2px bars drawn in CSS (no icon-font dependency). While the drawer
+  // is open the toggle script drops `.collapsed` and the outer bars rotate
+  // into an X.
+  .site-nav-toggle-icon {
+    position: relative;
+    display: block;
+    width: 1.125rem;
+    height: 2px;
+    background-color: currentColor;
+    transition: background-color 0.15s ease-in-out;
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: currentColor;
+      transition: transform 0.2s ease-in-out;
+    }
+
+    &::before {
+      transform: translateY(-6px);
+    }
+
+    &::after {
+      transform: translateY(6px);
+    }
+  }
+
+  .site-nav-toggle:not(.collapsed) .site-nav-toggle-icon {
+    background-color: transparent;
+
+    &::before {
+      transform: rotate(45deg);
+    }
+
+    &::after {
+      transform: rotate(-45deg);
+    }
+  }
+
+  .site-nav-current {
+    overflow: hidden;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--global-text-color);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .site-nav {
+    position: fixed;
+    top: $site-nav-bar-height;
+    bottom: 0;
+    left: 0;
+    z-index: 25;
+    width: 16rem;
+    max-width: 80vw;
+    margin: 0;
+    padding: 1.25rem 15px;
+    overflow-y: auto;
+    background-color: var(--global-bg-color);
+    border-right: 1px solid var(--global-divider-color);
+    transform: translateX(-100%);
+    visibility: hidden; // keeps the hidden links out of the tab order
+    transition:
+      transform 0.2s ease-in-out,
+      visibility 0.2s;
+
+    &.show {
+      transform: none;
+      visibility: visible;
+    }
+  }
+
+  .site-nav-list {
+    row-gap: 0.75rem;
+  }
+
+  .site-nav-backdrop {
+    display: none;
+    position: fixed;
+    inset: $site-nav-bar-height 0 0 0;
+    z-index: 20;
+    background-color: rgba(0, 0, 0, 0.35);
+  }
+
+  .site-nav.show ~ .site-nav-backdrop {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-nav,
+  .site-nav-toggle-icon,
+  .site-nav-toggle-icon::before,
+  .site-nav-toggle-icon::after {
+    transition: none;
+  }
+}
+
+@media (min-width: $site-nav-breakpoint) {
+  .site-nav-bar,
+  .site-nav-backdrop {
+    display: none;
+  }
+
+  body {
+    // Reserve the left rail; .container (auto margins) re-centers in the
+    // remaining width, footer included.
+    padding-left: calc(#{$site-nav-width} + #{$site-nav-gap});
+  }
+
+  .site-header {
+    // Zero-height sticky strip at the top of <body>: paints the rail without
+    // pushing content down and keeps the nav on screen while scrolling.
+    position: sticky;
+    top: 0;
+    height: 0;
+    z-index: 10;
+  }
+
+  // Extra breathing room above every page on the wide (sidebar) layout: the
+  // gem's default layout gives the main container a 3rem top margin (an
+  // !important mt-5 utility); add the same again as padding so the content
+  // (name heading, photo, lists) starts 6rem down. Narrow viewports (hamburger
+  // bar) keep the gem's 3rem. The nav rail's padding-top below moves with it.
+  .container[role="main"] {
+    padding-top: 3rem;
+  }
+
+  .site-nav {
+    width: $site-nav-width;
+    // Within the padded body, the container's text edge sits at
+    // (100% - max-content-width) / 2 + 15px; put the rail one gutter to its
+    // left. Negative results reach into the reserved body padding.
+    margin: 0 0 0 calc((100% - var(--max-content-width)) / 2 + 15px - #{$site-nav-gap} - #{$site-nav-width});
+    // Content top offset (see `.container[role="main"]` above: 3rem mt-5 +
+    // 3rem padding = 6rem); at that value the first link's 21px line box is
+    // vertically centered on the 1.125rem name heading. Tune visually.
+    padding: 6rem 0 0;
+  }
+
+  .site-nav-list {
+    row-gap: 0.375rem;
+  }
+}
+
+// Dark-mode backdrop: a fake of a translucent, blurred terminal window. A page
+// can't see what is behind the browser, so a fixed layer stands in for the
+// "wallpaper": four large soft colour blobs (radial gradients, so no blur
+// filter is needed) under a 74% tint of the page colour. The palette is a
+// muted dusk: dark plum across the top, dusty rose bottom-left, slate blue
+// bottom-right, and a pale grey sweep between them. body::after adds a
+// faint noise grain that hides gradient banding. Both sit at z-index -1, above
+// the canvas (which takes the body's --global-bg-color) and below all content.
+// To tune: raise the tint alpha for a subtler effect, or change the blob
+// colours. Delete this block to return to the flat background.
+html[data-theme="dark"] body::before,
+html[data-theme="dark"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+html[data-theme="dark"] body::before {
+  background:
+    linear-gradient(rgba(18, 18, 18, 0.74), rgba(18, 18, 18, 0.74)),
+    radial-gradient(90vmax 70vmax at 0% 100%, #a56b70 0%, transparent 70%),
+    radial-gradient(65vmax 70vmax at 100% 85%, #6f8c9c 0%, transparent 70%),
+    radial-gradient(60vmax 45vmax at 66% 55%, #a3a3a6 0%, transparent 70%),
+    radial-gradient(70vmax 50vmax at 30% 0%, #2b1c29 0%, transparent 75%),
+    #1a1418;
+}
+
+html[data-theme="dark"] body::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+}
+
+// The narrow-viewport bar and drawer are frosted panes over the backdrop
+// instead of solid panels. The filter is on the bar and the drawer themselves,
+// never on .site-header: a backdrop-filter there would become the containing
+// block of the fixed drawer and break its positioning.
+@media (max-width: $site-nav-narrow-max) {
+  html[data-theme="dark"] .site-nav-bar,
+  html[data-theme="dark"] .site-nav {
+    background-color: rgba(18, 18, 18, 0.72);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+}

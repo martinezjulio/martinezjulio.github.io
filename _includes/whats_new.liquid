@@ -1,0 +1,69 @@
+{% comment %}
+  Site-local include (not a gem override): a single "what's new" feed that
+  merges blog posts (_posts) and news items (_news) into one chronological
+  list, newest first, rendered as al-folio's compact date | item news table
+  (table table-sm table-borderless), with a small muted "blog" tag marking
+  blog posts (announcements are left untagged, but the tag column is kept so
+  the item titles still line up).
+
+  Params:
+    limit — optional integer; show only the first N items (about-page teaser).
+            Omit to show everything (the full /whats-new/ page).
+
+  Classification is by source path: _news/* => news, everything else
+  (including al_ext_posts external posts) => blog. Blog rows and non-inline
+  news rows link via a .news-title link (external redirects open in a new tab
+  with the outbound-arrow SVG, mirroring _pages/blog.md); inline announcements
+  render their body in place with no link, matching the gem's news behavior.
+
+  Styled by the site-local section of assets/css/main.scss (.whats-new-*).
+{% endcomment %}
+{% assign feed = site.posts | concat: site.news | sort: 'date' | reverse %}
+{% if include.limit %}
+  {% assign feed_limit = include.limit | plus: 0 %}
+  {% assign feed = feed | slice: 0, feed_limit %}
+{% endif %}
+
+<div class="whats-new">
+  <div class="table-responsive">
+    <table class="table table-sm table-borderless whats-new-table">
+      {% for item in feed %}
+        {% assign is_news = false %}
+        {% if item.path contains '_news' %}
+          {% assign is_news = true %}
+        {% endif %}
+        <tr>
+          <th scope="row" class="whats-new-date">{{ item.date | date: '%b %d, %Y' }}</th>
+          <td class="whats-new-meta">
+            {% unless is_news -%}
+              <span class="whats-new-tag">blog</span>
+            {%- endunless %}
+          </td>
+          <td class="whats-new-item">
+            {% if is_news and item.inline %}
+              {{ item.content }}
+            {% elsif is_news %}
+              <a class="news-title" href="{{ item.url | relative_url }}">{{ item.title }}</a>
+            {% elsif item.redirect == blank %}
+              <a class="news-title" href="{{ item.url | relative_url }}">{{ item.title }}</a>
+            {% elsif item.redirect contains '://' %}
+              <a class="news-title" href="{{ item.redirect }}" target="_blank">{{ item.title }}</a>
+              <svg class="external-icon" viewBox="3 3 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path
+                  d="M17 13.5v6H5v-12h6m3-3h6v6m0-6-9 9"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  fill="none"
+                  fill-rule="evenodd"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"></path>
+              </svg>
+            {% else %}
+              <a class="news-title" href="{{ item.redirect | relative_url }}">{{ item.title }}</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>

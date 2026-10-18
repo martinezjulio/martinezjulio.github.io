@@ -1,0 +1,134 @@
+{% comment %}
+  Site-local override of al_folio_core's _includes/header.liquid
+  (docs/CUSTOMIZE.md: "optional local override includes").
+  Minimal navigation: a plain list of top-level links
+  (about + pages with `nav: true`, ordered by `nav_order`; any page, the about
+  page included, may set `nav_title` to override its link label without changing
+  its title), styled by
+  the site-local section of assets/css/main.scss as a vertical left
+  sidebar on wide viewports (with a dot marking the active page). On narrow
+  viewports (below the sidebar breakpoint) the same list becomes a left
+  slide-out drawer opened from a slim sticky bar (hamburger button + current
+  page label).
+
+  Open/close behaviour comes from the gem's assets/js/nav-toggle.js, which is
+  loaded on every page and drives any [data-nav-toggle="<id>"] button: a click
+  toggles `.show` on #<id> and `.collapsed` + aria-expanded on the button;
+  clicks outside the panel and Escape close it. Keep a SINGLE toggle per panel
+  (the script treats a second toggle as an outside click and closes the panel
+  immediately). The .site-nav-backdrop sibling after the nav is revealed by CSS
+  while open and closes the drawer because it sits outside the panel.
+
+  The site's color scheme is set by `site_theme: light | dark` in
+  _config.yml (no visitor toggle): `dark` applies the gem's existing
+  html[data-theme="dark"] palette and loads the dark code-highlighting
+  stylesheet.
+
+  Intentionally NOT reproduced from the gem version: the navbar brand /
+  site-title link, dropdown submenus, the search button
+  (site.search_enabled), the theme toggle (site.enable_darkmode), and the
+  scroll progress bar (site.enable_progressbar). This override assumes
+  navbar_fixed: false, search_enabled: false, enable_darkmode: false and
+  enable_progressbar: false in _config.yml. To restore any gem behavior,
+  delete this file.
+{% endcomment %}
+{% if site.site_theme == 'dark' %}
+  <script>
+    document.documentElement.setAttribute('data-theme', 'dark');
+  </script>
+  <link rel="stylesheet" href="{{ '/assets/css/jekyll-pygments-themes-native.css' | relative_url | bust_file_cache }}">
+{% endif %}
+{% comment %}
+  Pre-pass: the about page's title and the nav label of the active entry
+  (shown next to the hamburger on narrow viewports). Posts and paginated blog
+  pages resolve to "blog" because their URL contains the blog permalink.
+{% endcomment %}
+{% assign sorted_pages = site.pages | sort: 'nav_order' %}
+{% assign about_title = 'about' %}
+{% for p in sorted_pages %}
+  {% if p.permalink == '/' %}
+    {% assign about_title = p.nav_title | default: p.title %}
+  {% endif %}
+{% endfor %}
+{% assign current_label = page.title %}
+{% if page.permalink == '/' %}
+  {% assign current_label = about_title %}
+{% else %}
+  {% for p in sorted_pages %}
+    {% if p.nav and p.autogen == null and p.dropdown != true %}
+      {% assign parent_link = p.permalink | remove: 'index.html' %}
+      {% if page.url contains parent_link %}
+        {% assign current_label = p.nav_title | default: p.title %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+<header class="site-header">
+  <!-- Narrow viewports only (hidden by CSS at the sidebar breakpoint) -->
+  <div class="site-nav-bar">
+    <button
+      type="button"
+      class="site-nav-toggle collapsed"
+      data-nav-toggle="site-nav"
+      aria-controls="site-nav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="site-nav-toggle-icon" aria-hidden="true"></span>
+    </button>
+    <span class="site-nav-current">{{- current_label -}}</span>
+  </div>
+
+  <nav id="site-nav" class="site-nav" role="navigation" aria-label="Main">
+    <ul class="site-nav-list">
+      <!-- About -->
+      <li class="site-nav-item {% if page.permalink == '/' %}active{% endif %}">
+        <a
+          class="site-nav-link"
+          href="{{ '/' | relative_url }}"
+          {% if page.permalink == '/' %}
+            aria-current="page"
+          {% endif %}
+        >
+          {{- about_title -}}
+        </a>
+      </li>
+
+      <!-- Pages with nav: true, by nav_order (dropdown pages are not supported) -->
+      {% for p in sorted_pages %}
+        {% comment %}
+          Config-level nav toggle: site.nav_visibility[title] == false hides a page from the nav
+          (page stays published). Pages absent from nav_visibility follow their own `nav:` front matter.
+        {% endcomment %}
+        {% assign nav_hidden = false %}
+        {% if site.nav_visibility[p.title] == false %}
+          {% assign nav_hidden = true %}
+        {% endif %}
+        {% if p.nav and p.autogen == null and p.dropdown != true and nav_hidden == false %}
+          {% assign parent_link = p.permalink | remove: 'index.html' %}
+          {%- if p.permalink contains '://' -%}
+            {%- assign url = p.permalink -%}
+          {%- elsif p.permalink contains '/blog/' -%}
+            {%- assign url = '/blog/' -%}
+          {%- else -%}
+            {%- assign url = p.url -%}
+          {%- endif %}
+          <li class="site-nav-item {% if page.url contains parent_link %}active{% endif %}">
+            <a
+              class="site-nav-link"
+              href="{{ url | relative_url }}"
+              {% if page.url contains parent_link %}
+                aria-current="page"
+              {% endif %}
+            >
+              {{- p.nav_title | default: p.title -}}
+            </a>
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </nav>
+
+  <!-- Dimmed page behind the open drawer; a tap here is "outside the panel" and closes it -->
+  <div class="site-nav-backdrop"></div>
+</header>
