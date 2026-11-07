@@ -6,12 +6,13 @@ category: research
 ---
 
 {% comment %}
-Stub page: just the title and two placeholder links, centered. Uses layout:
-default (not page) so the layout does not print its own header; the full
-write-up will come once the paper exists.
+Stub page: just the title and a row of links (pre-registration, experiment,
+experiment code, model code, arXiv), centered. Uses layout: default (not page)
+so the layout does not print its own header; the full write-up will come once
+the paper exists.
 
 The arXiv button stays a placeholder until the preprint is posted: put the
-URL in href, make it open in a new tab like the other two, drop the
+URL in href, make it open in a new tab like the others, drop the
 link-pending class and aria-disabled attribute, and remove the note below.
 {% endcomment %}
 
@@ -45,7 +46,9 @@ link-pending class and aria-disabled attribute, and remove the note below.
   <h1 class="post-title">{{ page.title }}</h1>
   <div class="project-links">
   <a class="btn btn-sm z-depth-0" href="https://01a195f7-7159-fe92-44c1-649f97c62b24.share.connect.posit.cloud/" target="_blank" rel="external nofollow noopener" role="button">Pre-registration</a>
-  <a class="btn btn-sm z-depth-0" href="https://github.com/martinezjulio/SocialTransformer" target="_blank" rel="external nofollow noopener" role="button">Code</a>
+  <a class="btn btn-sm z-depth-0" href="https://asteroidadventure.com/ver2_2026_11_05/" target="_blank" rel="external nofollow noopener" role="button">Experiment</a>
+  <a class="btn btn-sm z-depth-0" href="https://github.com/martinezjulio/AsteroidMiningAdenture" target="_blank" rel="external nofollow noopener" role="button">Experiment Code</a>
+  <a class="btn btn-sm z-depth-0" href="https://github.com/martinezjulio/SocialTransformer" target="_blank" rel="external nofollow noopener" role="button">Model Code</a>
   <a class="btn btn-sm z-depth-0 link-pending" href="#" aria-disabled="true" role="button">arXiv</a>
 </div>
 <p class="project-links-note"><small>This page will be updated with the arXiv link soon.</small></p>
